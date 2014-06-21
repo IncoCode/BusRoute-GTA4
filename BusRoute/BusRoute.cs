@@ -16,11 +16,11 @@ namespace BusRoute
         {
             private readonly Vehicle _bus;
             private Ped _driver;
-            private readonly List<Ped> _passagers;
-            private Ped _passagerDest;
+            private readonly List<Ped> _passengers;
+            private Ped _passengerDest;
             private Blip _blip;
             private Timer _timer;
-            private bool _waitForPassager = false;
+            private bool _waitForPassenger = false;
 
             #region Поля
 
@@ -34,21 +34,21 @@ namespace BusRoute
                 get { return this._driver; }
             }
 
-            public List<Ped> Passagers
+            public List<Ped> Passengers
             {
-                get { return this._passagers; }
+                get { return this._passengers; }
             }
 
             public Ped Destination
             {
-                get { return this._passagerDest; }
+                get { return this._passengerDest; }
             }
 
             public bool Driving { get; set; }
 
-            public bool WaitForPassager
+            public bool WaitForPassenger
             {
-                get { return this._waitForPassager; }
+                get { return this._waitForPassenger; }
             }
 
             #endregion
@@ -62,34 +62,31 @@ namespace BusRoute
                 this._bus = World.CreateVehicle( "BUS", spawnPos );
                 this._bus.Rotation = new Vector3( 0, 0, 180 );
                 this._driver = this._bus.CreatePedOnSeat( VehicleSeat.Driver );
-                this._passagers = new List<Ped>();
-                this._passagerDest = World.CreatePed( dest, GetRandomGender() );
-                this._passagerDest.Invincible = true;
+                this._passengers = new List<Ped>();
+                this._passengerDest = World.CreatePed( dest, GetRandomGender() );
+                this._passengerDest.Invincible = true;
             }
 
             private void _timer_Tick( object sender, EventArgs e )
             {
-                if ( this._bus.Position.DistanceTo( this._passagerDest.Position ) <= 6F && !this._waitForPassager )
+                if ( this._bus.Position.DistanceTo( this._passengerDest.Position ) <= 6F && !this._waitForPassenger )
                 {
                     Game.DisplayText( "reached" );
-                    this._waitForPassager = true;
+                    this._waitForPassenger = true;
                     this._driver.Task.ClearAll();
                     this._bus.Speed = 0;
-                    //var tasks = new TaskSequence();
-                    //tasks.AddTask.EnterVehicle( this._bus, _bus.GetFreePassengerSeat() );
-                    //this._passagerDest.Task.PerformSequence( tasks );
-                    this._passagerDest.Task.EnterVehicle( this._bus, this._bus.GetFreePassengerSeat() );
+                    this._passengerDest.Task.EnterVehicle( this._bus, this._bus.GetFreePassengerSeat() );
                 }
-                if ( this._waitForPassager )
+                if ( this._waitForPassenger )
                 {
-                    if ( this._passagerDest.isInVehicle( this._bus ) )
+                    if ( this._passengerDest.isInVehicle( this._bus ) )
                     {
-                        this._passagers.Add( this._passagerDest );
-                        this._passagerDest.Invincible = false;
-                        this._passagerDest = World.CreatePed( new Vector3( 1087.16F, 197.99F, 30.72F ),
+                        this._passengers.Add( this._passengerDest );
+                        this._passengerDest.Invincible = false;
+                        this._passengerDest = World.CreatePed( new Vector3( 1087.16F, 197.99F, 30.72F ),
                             GetRandomGender() );
-                        this._passagerDest.Invincible = true;
-                        this._waitForPassager = false;
+                        this._passengerDest.Invincible = true;
+                        this._waitForPassenger = false;
                     }
                 }
             }
@@ -98,19 +95,6 @@ namespace BusRoute
             {
                 Random random = new Random();
                 return random.Next( 1, 100 ) >= 50 ? Gender.Male : Gender.Female;
-            }
-
-            /// <summary>
-            /// Создает пассажира для автобуса
-            /// </summary>
-            public Ped CreatePassager()
-            {
-                Ped passager = World.CreatePed( this._bus.Position.Around( 20F ), GetRandomGender() );
-                var tasks = new TaskSequence();
-                tasks.AddTask.EnterVehicle( this._bus, VehicleSeat.AnyPassengerSeat );
-                passager.Task.PerformSequence( tasks );
-                this._passagers.Add( passager );
-                return passager;
             }
         }
 
@@ -136,7 +120,7 @@ namespace BusRoute
                 {
                     continue;
                 }
-                if ( !bus.WaitForPassager )
+                if ( !bus.WaitForPassenger )
                 {
                     bus.Driver.Task.ClearAll();
                     bus.Driver.Task.AlwaysKeepTask = true;
